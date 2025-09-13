@@ -1,7 +1,7 @@
 import React from "react";
 import InputComp from "../../shared/components/InputComp";
 const RegisterPageInputs = (props) => {
-  const { email, setEmail, username, setUsername, password, setPassword } =
+  const { mail, setMail, username, setUsername, password, setPassword } =
     props;
   return (
     <>
@@ -13,11 +13,11 @@ const RegisterPageInputs = (props) => {
         placeholder="Enter your username"
       />
       <InputComp
-        label="Email"
-        value={email}
-        setValue={setEmail}
+        label="Mail"
+        value={mail}
+        setValue={setMail}
         type="email"
-        placeholder="Enter your email"
+        placeholder="Enter your mail"
       />
       <InputComp
         label="Password"

@@ -1,15 +1,15 @@
 import React from "react";
 import InputComp from "../../shared/components/InputComp";
 
-const LoginPageInputs = ({ email, setEmail, password, setPassword }) => {
+const LoginPageInputs = ({ mail, setMail, password, setPassword }) => {
   return (
     <>
       <InputComp
-        label="Email"
-        value={email}
-        setValue={setEmail}
+        label="Mail"
+        value={mail}
+        setValue={setMail}
         type="email"
-        placeholder="Enter your email"
+        placeholder="Enter your mail"
       />
       <InputComp
         label="Password"

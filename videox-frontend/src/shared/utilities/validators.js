@@ -21,7 +21,7 @@ const validateUsername = (username) => {
   return username.length >= 3 && username.length <= 15;
 };
 
-const validateMail = (mail) => {
+export const validateMail = (mail) => {
   const mailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
   return mailRegex.test(mail);
 };

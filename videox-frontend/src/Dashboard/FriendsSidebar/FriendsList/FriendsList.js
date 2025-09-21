@@ -1,26 +1,25 @@
 import React from "react";
 import FriendsListItem from "./FriendsListItem";
-const FriendsList = () => {
-  const dummy = [
-    {
-      id: 1,
-      name: "Mark",
-      isOnline: true,
-    },
-    {
-      id: 2,
-      name: "John",
-      isOnline: false,
-    },
-    
-  ];
+import { connect } from "react-redux";
+const FriendsList = ({ friends, onlineUsers }) => {
+  console.log("[DEBUG] Friends:", friends);
+  console.log("[DEBUG] OnlineUsers:", onlineUsers);
   return (
     <div className="flex flex-col gap-2">
-      {dummy.map((friend) => (
-        <FriendsListItem key={friend.id} name={friend.name} isOnline={friend.isOnline} />
+      {friends.map((friend) => (
+        <FriendsListItem
+          key={friend._id || friend.id}
+          name={friend.username}
+          isOnline={onlineUsers.includes(friend._id || friend.id)}
+        />
       ))}
     </div>
   );
 };
 
-export default FriendsList;
+const mapStateToProps = ({ friends }) => ({
+  friends: friends.friends,
+  onlineUsers: friends.onlineUsers,
+});
+
+export default connect(mapStateToProps)(FriendsList);

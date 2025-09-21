@@ -6,6 +6,7 @@ import AppBar from './AppBar/AppBar';
 import { logout } from '../shared/utilities/auth';
 import {connect} from 'react-redux';
 import { getActions } from '../actions/authActions';
+import { connectWithSocketServer } from '../realTimeCommunication/socketConnection';
 const DashboardPage = ({setUserDetails}) => {
 
 
@@ -21,6 +22,7 @@ const DashboardPage = ({setUserDetails}) => {
       logout();
     } else {
       setUserDetails(JSON.parse(userDetails));
+      connectWithSocketServer(JSON.parse(userDetails));
     }
   },[]);
 

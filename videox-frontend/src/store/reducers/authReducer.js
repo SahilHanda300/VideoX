@@ -1,20 +1,19 @@
+// Reducer for authentication state
 import { authActions } from "../../actions/authActions";
 
 const initState = {
-  userDetails: null,
+  user: JSON.parse(localStorage.getItem("user")) || null,
 };
 
-const reducer = (state = initState, action) => {
+const authReducer = (state = initState, action) => {
   switch (action.type) {
-    case authActions.SET_USER_DETAILS:
-      return {
-        ...state,
-        userDetails: action.userDetails,
-      };
-
+    case authActions.LOGIN_SUCCESS:
+      return { ...state, user: action.payload };
+    case authActions.LOGOUT:
+      return { ...state, user: null };
     default:
-     return state;
+      return state;
   }
 };
 
-export default reducer;
+export default authReducer;

@@ -2,6 +2,7 @@ import React from "react";
 import PendingInvitationListItem from "./PendingInvitationListItem";
 import { connect } from "react-redux";
 
+// Renders the list of pending friend invitations
 const PendingInvitationsList = ({ pendingFriendInvitations }) => {
   return (
     <div className="w-full flex flex-col items-center gap-2">
@@ -25,6 +26,7 @@ const PendingInvitationsList = ({ pendingFriendInvitations }) => {
 };
 
 const mapStoreToProps = ({ friends }) => ({
+  // Get pending invitations from Redux state
   pendingFriendInvitations: friends.pendingFriendInvitations,
 });
 

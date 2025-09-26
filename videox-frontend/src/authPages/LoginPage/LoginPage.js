@@ -8,20 +8,25 @@ import { connect } from "react-redux";
 import { getActions } from "../../actions/authActions";
 import { useNavigate } from "react-router-dom";
 
+// Login page component for user authentication
 const LoginPage = ({ login }) => {
-  const navigate = useNavigate(); // hook from react-router
+  const navigate = useNavigate(); // navigation hook
+  // State for form fields and validation
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
 
+  // Validate form whenever mail or password changes
   useEffect(() => {
     setIsFormValid(validateLoginForm({ mail, password }));
   }, [mail, password]);
 
+  // Handle login button click
   const handleLogin = async () => {
-    await login({ mail, password }, navigate); // pass navigate explicitly
+    await login({ mail, password }, navigate);
   };
 
+  // Render login form
   return (
     <AuthComp>
       <LoginPageHeader />

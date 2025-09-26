@@ -1,9 +1,10 @@
 import React from "react";
 import InputComp from "../../shared/components/InputComp";
-
+// Renders input fields for login form
 const LoginPageInputs = ({ mail, setMail, password, setPassword }) => {
   return (
     <>
+      {/* Email input */}
       <InputComp
         label="Mail"
         value={mail}
@@ -11,6 +12,7 @@ const LoginPageInputs = ({ mail, setMail, password, setPassword }) => {
         type="email"
         placeholder="Enter your mail"
       />
+      {/* Password input */}
       <InputComp
         label="Password"
         value={password}

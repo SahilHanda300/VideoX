@@ -4,6 +4,7 @@ import InvitationDecisionButtons from "./InvitationDecisionButtons";
 import { connect } from "react-redux";
 import { getActions } from "../../../actions/friendsActions";
 
+// Renders a single pending friend invitation with accept/reject actions
 const PendingInvitationListItem = ({
   id,
   username,
@@ -11,27 +12,29 @@ const PendingInvitationListItem = ({
   acceptFriendInvitation = () => {},
   rejectFriendInvitation = () => {},
 }) => {
+  // State for button and action status
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
 
+  // Handle accept invitation
   const handleAcceptInvitation = async () => {
     if (buttonDisabled || actionInProgress) return;
-
     setActionInProgress(true);
     await acceptFriendInvitation({ id });
     setButtonDisabled(true);
     setActionInProgress(false);
   };
 
+  // Handle reject invitation
   const handleRejectInvitation = async () => {
     if (buttonDisabled || actionInProgress) return;
-
     setActionInProgress(true);
     await rejectFriendInvitation({ id });
     setButtonDisabled(true);
     setActionInProgress(false);
   };
 
+  // Render invitation item with accept/reject buttons
   return (
     <Tooltip title={mail} arrow>
       <Button

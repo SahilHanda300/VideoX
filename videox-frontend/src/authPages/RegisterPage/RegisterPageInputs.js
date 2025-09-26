@@ -1,10 +1,12 @@
 import React from "react";
 import InputComp from "../../shared/components/InputComp";
+// Renders input fields for registration form
 const RegisterPageInputs = (props) => {
-  const { mail, setMail, username, setUsername, password, setPassword } =
-    props;
+  // Destructure form state and setters from props
+  const { mail, setMail, username, setUsername, password, setPassword } = props;
   return (
     <>
+      {/* Username input */}
       <InputComp
         label="Username"
         value={username}
@@ -12,6 +14,7 @@ const RegisterPageInputs = (props) => {
         type="text"
         placeholder="Enter your username"
       />
+      {/* Email input */}
       <InputComp
         label="Mail"
         value={mail}
@@ -19,6 +22,7 @@ const RegisterPageInputs = (props) => {
         type="email"
         placeholder="Enter your mail"
       />
+      {/* Password input */}
       <InputComp
         label="Password"
         value={password}

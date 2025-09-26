@@ -8,7 +8,9 @@ const initState = {
 const authReducer = (state = initState, action) => {
   switch (action.type) {
     case authActions.LOGIN_SUCCESS:
-      return { ...state, user: action.payload };
+      return { ...state, user: action.userDetails || action.payload };
+    case authActions.SET_USER_DETAILS:
+      return { ...state, user: action.userDetails };
     case authActions.LOGOUT:
       return { ...state, user: null };
     default:

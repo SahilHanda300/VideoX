@@ -1,7 +1,7 @@
 // Reducer for friends, invitations, and online users
 const initialState = {
   friends: [],
-  pendingInvitations: [],
+  pendingFriendInvitations: [],
   onlineUsers: [],
 };
 
@@ -15,7 +15,7 @@ const friendsReducer = (state = initialState, action) => {
     case "FRIENDS.SET_PENDING_FRIEND_INVITATIONS":
       return {
         ...state,
-        pendingInvitations: action.pendingFriendInvitations,
+        pendingFriendInvitations: action.pendingFriendInvitations,
       };
     case "FRIENDS.SET_ONLINE_USERS":
       return {

@@ -1,19 +1,17 @@
-// Renders a single friend item with online indicator and chat selection
 import React from "react";
 import { Button, Avatar } from "@mui/material";
 import OnlineIndicator from "./OnlineIndicator";
 import { chatTypes, getActions } from "../../../actions/chatActions";
 import { connect } from "react-redux";
 
-// Renders a single friend item with online indicator and chat selection
 const FriendsListItem = ({ id, username, isOnline, setChosenChatDetails }) => {
-  // Handle friend click to select chat
+
   const handleChooseActiveConversation = () => {
     if (setChosenChatDetails && id && username) {
       setChosenChatDetails({ _id: id, name: username }, chatTypes.DIRECT);
     }
   };
-  // Render friend item with avatar, name, and online indicator
+  
   return (
     <Button
       onClick={handleChooseActiveConversation}

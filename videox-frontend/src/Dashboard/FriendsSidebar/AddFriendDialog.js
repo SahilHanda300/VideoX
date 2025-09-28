@@ -35,6 +35,13 @@ const AddFriendDialog = ({
     setIsFormValid(validateMail(mail));
   }, [mail]);
 
+  const handleKeyPress = (event) => {
+    if (event.key === "Enter" && formValid && !event.shiftKey) {
+      event.preventDefault();
+      handleSendInvitation();
+    }
+  };
+
   return (
     <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
       <DialogTitle>Invite a Friend</DialogTitle>
@@ -42,15 +49,24 @@ const AddFriendDialog = ({
         <DialogContentText>
           Enter your friend's email address to send them an invitation.
         </DialogContentText>
-        <InputComp label="Friend's Email" type="email" value={mail} setValue={setMail} />
+        <InputComp
+          label="Friend's Email"
+          type="email"
+          value={mail}
+          setValue={setMail}
+          onKeyPress={handleKeyPress}
+        />
       </DialogContent>
       <DialogActions>
-        <CustomButton onClick={handleSendInvitation} disabled={!formValid} label="Send Invitation" />
+        <CustomButton
+          onClick={handleSendInvitation}
+          disabled={!formValid}
+          label="Send Invitation"
+        />
       </DialogActions>
     </Dialog>
   );
 };
-
 
 const mapActions = (dispatch) => {
   return {

@@ -3,17 +3,16 @@ import CustomButton from "../../shared/components/CustomButton";
 import RedirectInfo from "../../shared/components/RedirectInfo";
 import { useNavigate } from "react-router-dom";
 import { Tooltip } from "@mui/material";
-// Footer for register page: handles register button and redirect to login
+
 const RegisterPageFooter = ({ handleRegister, isFormValid }) => {
   const navigate = useNavigate();
 
-  // Redirect to login page
   const redirectHandler = () => {
     navigate("/login");
   };
   return (
     <>
-      {/* Register button with tooltip for validation */}
+
       <Tooltip
         title={
           isFormValid
@@ -29,7 +28,7 @@ const RegisterPageFooter = ({ handleRegister, isFormValid }) => {
           />
         </div>
       </Tooltip>
-      {/* Redirect to login link */}
+
       <RedirectInfo
         text="Already have an account? "
         redirectText="Login"

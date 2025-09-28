@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Define message schema fields
 const messageSchema = new mongoose.Schema({
   author: {
     type: Schema.Types.ObjectId,

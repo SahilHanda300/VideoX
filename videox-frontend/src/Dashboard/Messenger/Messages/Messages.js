@@ -10,7 +10,7 @@ import {
 } from "../../../realTimeCommunication/socketConnection";
 
 const Messages = ({ chosenChatDetails, messages }) => {
-  // Handle message editing
+  
   const handleEditMessage = (messageId, newContent) => {
     editMessage({
       messageId,
@@ -19,7 +19,6 @@ const Messages = ({ chosenChatDetails, messages }) => {
     });
   };
 
-  // Handle message deletion
   const handleDeleteMessage = (messageId) => {
     deleteMessage({
       messageId,
@@ -32,15 +31,13 @@ const Messages = ({ chosenChatDetails, messages }) => {
       className="flex-1 flex flex-col h-full w-full relative"
       style={{ minHeight: 0 }}
     >
-      {/* Chat header */}
       <MessagesHeader name={chosenChatDetails?.name} />
 
-      {/* Messages + input */}
       <div
         className="flex flex-col flex-1"
         style={{ position: "relative", minHeight: 0 }}
       >
-        {/* Scrollable messages */}
+
         <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2">
           {messages.map((message, index) => {
             const author = message.author || {};
@@ -73,7 +70,6 @@ const Messages = ({ chosenChatDetails, messages }) => {
           })}
         </div>
 
-        {/* Input bar (always at bottom) */}
         <NewMessageInput chosenChatDetails={chosenChatDetails} />
       </div>
     </div>

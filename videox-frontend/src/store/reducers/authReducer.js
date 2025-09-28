@@ -1,4 +1,3 @@
-// Reducer for authentication state
 import { authActions } from "../../actions/authActions";
 
 const initState = {

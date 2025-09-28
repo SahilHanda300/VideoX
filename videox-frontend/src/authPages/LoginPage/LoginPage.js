@@ -8,25 +8,24 @@ import { connect } from "react-redux";
 import { getActions } from "../../actions/authActions";
 import { useNavigate } from "react-router-dom";
 
-// Login page component for user authentication
+
 const LoginPage = ({ login }) => {
-  const navigate = useNavigate(); // navigation hook
-  // State for form fields and validation
+  const navigate = useNavigate();
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
 
-  // Validate form whenever mail or password changes
   useEffect(() => {
     setIsFormValid(validateLoginForm({ mail, password }));
   }, [mail, password]);
 
-  // Handle login button click
-  const handleLogin = async () => {
-    await login({ mail, password }, navigate);
+    const handleLogin = async () => {
+    const success = await login({ mail, password }, navigate);
+    // If login failed, we stay on the login page (no navigation needed)
+    // The error message will be shown via the alert system
   };
 
-  // Render login form
+  
   return (
     <AuthComp>
       <LoginPageHeader />
@@ -35,6 +34,7 @@ const LoginPage = ({ login }) => {
         setMail={setMail}
         password={password}
         setPassword={setPassword}
+        handleLogin={handleLogin}
       />
       <LoginPageFooter isFormValid={isFormValid} handleLogin={handleLogin} />
     </AuthComp>

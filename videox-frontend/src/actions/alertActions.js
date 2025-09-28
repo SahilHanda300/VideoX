@@ -11,19 +11,21 @@ export const getActions = (dispatch) => {
   };
 };
 
-
 export const openAlertMessage = (messageContent) => {
+  let message = messageContent;
+  if (typeof messageContent === "object") {
+    message = messageContent.message || JSON.stringify(messageContent);
+  }
   return {
     type: alertActions.OPEN_ALERT_MESSAGE,
-    messageContent,
+    messageContent: String(message || ""),
   };
-}
+};
 
 export const closeAlertMessage = () => {
   return {
     type: alertActions.CLOSE_ALERT_MESSAGE,
   };
-}
-
+};
 
 export default alertActions;

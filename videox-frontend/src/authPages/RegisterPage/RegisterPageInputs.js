@@ -1,34 +1,49 @@
 import React from "react";
 import InputComp from "../../shared/components/InputComp";
-// Renders input fields for registration form
+
 const RegisterPageInputs = (props) => {
-  // Destructure form state and setters from props
-  const { mail, setMail, username, setUsername, password, setPassword } = props;
+  const {
+    mail,
+    setMail,
+    username,
+    setUsername,
+    password,
+    setPassword,
+    handleRegister,
+  } = props;
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleRegister();
+    }
+  };
   return (
     <>
-      {/* Username input */}
       <InputComp
         label="Username"
         value={username}
         setValue={setUsername}
         type="text"
         placeholder="Enter your username"
+        onKeyPress={handleKeyPress}
       />
-      {/* Email input */}
+  
       <InputComp
         label="Mail"
         value={mail}
         setValue={setMail}
         type="email"
         placeholder="Enter your mail"
+        onKeyPress={handleKeyPress}
       />
-      {/* Password input */}
+      
       <InputComp
         label="Password"
         value={password}
         setValue={setPassword}
         type="password"
         placeholder="Enter your password"
+        onKeyPress={handleKeyPress}
       />
     </>
   );

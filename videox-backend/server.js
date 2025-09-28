@@ -1,28 +1,27 @@
-// Main backend server setup
 require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-const authRoutes = require("./routes/routes"); // Auth routes
-const friendsInvitationRoutes = require("./routes/friendsInvitationRoutes"); // Friends invitation routes
-const { registerSocketServer } = require("./socketServer"); // Socket.IO setup
+const authRoutes = require("./routes/routes");
+const friendsInvitationRoutes = require("./routes/friendsInvitationRoutes");
+const { registerSocketServer } = require("./socketServer");
 
 const app = express();
 const PORT = process.env.PORT || 5002;
 
-app.use(cors()); // Enable CORS
-app.use(express.json()); // Parse JSON bodies
+app.use(cors());
+app.use(express.json());
 
-app.use("/api/auth", authRoutes); // Auth API
-app.use("/api/friends", friendsInvitationRoutes); // Friends API
+app.use("/api/auth", authRoutes);
+app.use("/api/friends", friendsInvitationRoutes);
 
-const server = http.createServer(app); // Create HTTP server
+const server = http.createServer(app);
 
-registerSocketServer(server); // Setup Socket.IO
+registerSocketServer(server);
 
-// Connect to MongoDB and start server
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {

@@ -5,13 +5,16 @@ import RegisterPage from "./authPages/RegisterPage/RegisterPage"; // Register pa
 import DashboardPage from "./Dashboard/DashboardPage"; // Dashboard page
 import AlertNotification from "./shared/components/AlertNotification"; // Global alert notification
 import ProtectedRoute from "./shared/components/ProtectedRoute"; // Route protection for authenticated users
+import HomePage from "./HomePage";
 
 function App() {
   return (
     <>
-      {/* Set up application routes */}
+      {/* Setting up application routes */}
       <Router>
         <Routes>
+          {/* Home page */}
+          <Route path="/" element={<HomePage />} />
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

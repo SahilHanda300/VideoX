@@ -1,13 +1,49 @@
+import Peer from "peerjs";
 import { io } from "socket.io-client";
 import { setPendingInvitations, setFriends } from "../actions/friendsActions";
 import { updateDirectChatHistoryIfActive } from "../shared/utilities/chat";
 import store from "../store/store";
 
-// Create audio element for TING sound
+
+export const sendRoomStatusUpdate = (roomId, peerId, status) => {
+  if (socket && roomId && peerId) {
+    socket.emit("room-status-update", { roomId, peerId, status });
+  }
+};
+
+export const listenRoomStatusUpdates = () => {
+  if (!socket) return;
+  socket.on("room-status-updated", (data) => {
+
+    const { peerId, status } = data; 
+    const state = store.getState();
+    const roomDetails = state.room.roomDetails;
+    if (!roomDetails || !roomDetails.participants) return;
+    const updatedParticipants = roomDetails.participants.map((p) =>
+      p.peerId === peerId ? { ...p, ...status } : p
+    );
+    store.dispatch({
+      type: "ROOM.SET_ROOM_DETAILS",
+      roomDetails: { ...roomDetails, participants: updatedParticipants },
+    });
+  });
+};
+export const getSocket = () => socket;
+
+
+export const createNewRoom = () => {
+  if (socket) {
+    socket.emit("room-create");
+  } else {
+    console.error("Socket not initialized");
+  }
+};
+
+
 const tingAudio = typeof window !== "undefined" ? new Audio("/ting.mp3") : null;
 let socket = null;
 
-// Track whether we're loading chat history (should not play TING)
+
 let isLoadingChatHistory = false;
 
 export const connectWithSocketServer = (userDetails) => {
@@ -16,13 +52,22 @@ export const connectWithSocketServer = (userDetails) => {
     return;
   }
 
-  // Only create a new socket if one doesn't exist or is disconnected
   if (!socket || !socket.connected) {
     socket = io("http://localhost:5002", {
       auth: {
         token: userDetails.token,
       },
       transports: ["websocket", "polling"], // ensure websocket transport first
+    });
+
+    socket.on("room-details-updated", (data) => {
+      // data: { roomDetails }
+      if (data && data.roomDetails) {
+        store.dispatch({
+          type: "ROOM.SET_ROOM_DETAILS",
+          roomDetails: data.roomDetails,
+        });
+      }
     });
 
     socket.on("connect", () => {
@@ -49,7 +94,7 @@ export const connectWithSocketServer = (userDetails) => {
       store.dispatch(setFriends(friends));
     });
 
-    // Set up event listeners after socket is initialized
+
     socket.on("online-users", (data) => {
       const { onlineUsers } = data;
       console.log("[SOCKET] Received online-users:", onlineUsers);
@@ -58,7 +103,7 @@ export const connectWithSocketServer = (userDetails) => {
 
     socket.on("direct-chat-history", (data) => {
       updateDirectChatHistoryIfActive(data);
-      // Play TING sound only for new messages (not when loading chat history)
+
       if (
         !isLoadingChatHistory &&
         tingAudio &&
@@ -76,41 +121,65 @@ export const connectWithSocketServer = (userDetails) => {
           tingAudio.play();
         }
       }
-      // Reset the flag after processing
+
       isLoadingChatHistory = false;
     });
 
     socket.on("message-edited", (data) => {
-      console.log("[SOCKET] Message edited:", data);
       updateDirectChatHistoryIfActive(data);
     });
 
     socket.on("message-deleted", (data) => {
-      console.log("[SOCKET] Message deleted:", data);
       updateDirectChatHistoryIfActive(data);
     });
+
+    socket.on("active-rooms", (data) => {
+
+      if (data && data.activeRooms) {
+        store.dispatch({
+          type: "ROOM.SET_ACTIVE_ROOMS",
+          activeRooms: data.activeRooms,
+        });
+      }
+    });
+
     return socket;
   }
 };
 
 export const sendDirectMessage = (data) => {
-  console.log("Sending direct message:", data);
   socket.emit("direct-message", data);
 };
 
 export const getDirectChatHistory = (data) => {
-  console.log("Sending direct chat history request:", data);
-  // Set flag to indicate we're loading chat history (should not play TING)
   isLoadingChatHistory = true;
   socket.emit("direct-chat-history", data);
 };
 
 export const editMessage = (data) => {
-  console.log("Editing message:", data);
   socket.emit("edit-message", data);
 };
 
 export const deleteMessage = (data) => {
-  console.log("Deleting message:", data);
   socket.emit("delete-message", data);
+};
+
+export const sendPeerSignal = (signalData) => {
+  if (socket) {
+    socket.emit("peer-signal", signalData);
+  }
+};
+
+export const initiatePeerConnection = ({ roomId, peerId }) => {
+  if (socket && roomId && peerId) {
+    socket.emit("initiate-peer-connection", { roomId, peerId });
+  } else {
+    console.error(
+      "[SOCKET] Cannot emit initiate-peer-connection: missing socket, roomId, or peerId"
+    );
+  }
+};
+
+export const createPeerConnection = (peerId = undefined, options = {}) => {
+  return new Peer(peerId, options);
 };

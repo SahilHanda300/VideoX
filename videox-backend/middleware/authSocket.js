@@ -13,7 +13,8 @@ const verifyTokenSocket = (socket, next) => {
       return next(new Error("Authentication error"));
     }
     socket.user = decoded;
-    socket.userId = decoded.userId; // Set userId for socket
+    socket.userId = decoded.userId;
+    socket.user.username = decoded.username;
     next();
   });
 };

@@ -1,7 +1,14 @@
 import React from "react";
 import { TextField } from "@mui/material";
 
-const InputComp = ({ label, value, setValue, type, placeholder }) => {
+const InputComp = ({
+  label,
+  value,
+  setValue,
+  type,
+  placeholder,
+  onKeyPress,
+}) => {
   return (
     <TextField
       label={label}
@@ -12,6 +19,7 @@ const InputComp = ({ label, value, setValue, type, placeholder }) => {
       onChange={(e) => setValue(e.target.value)}
       type={type}
       placeholder={placeholder}
+      onKeyPress={onKeyPress}
       sx={{
         "& .MuiOutlinedInput-root": {
           backgroundColor: "transparent",

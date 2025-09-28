@@ -1,4 +1,3 @@
-// Reducer for friends, invitations, and online users
 const initialState = {
   friends: [],
   pendingFriendInvitations: [],

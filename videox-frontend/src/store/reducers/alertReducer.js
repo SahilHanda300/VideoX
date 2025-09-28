@@ -2,10 +2,9 @@ import alertActions from "../../actions/alertActions";
 
 const initState = {
   showAlert: false,
-  alertMessageContent: null,
+  alertMessageContent: "",
 };
 
-// Reducer for alert notifications
 const alertReducer = (state = initState, action) => {
   switch (action.type) {
     case alertActions.OPEN_ALERT_MESSAGE:
@@ -18,7 +17,7 @@ const alertReducer = (state = initState, action) => {
       return {
         ...state,
         showAlert: false,
-        alertMessageContent: null,
+        alertMessageContent: "",
       };
     default:
       return state;

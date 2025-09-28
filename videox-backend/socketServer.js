@@ -6,10 +6,15 @@ const directMessageHandler = require("./socketHandlers/directMessageHandler");
 const directChatHistoryHandler = require("./socketHandlers/directChatHistoryHandler");
 const editMessageHandler = require("./socketHandlers/editMessageHandler");
 const deleteMessageHandler = require("./socketHandlers/deleteMessageHandler");
+const roomCreateHandler = require("./socketHandlers/roomCreateHandler");
+
+const roomJoinHandler = require("./socketHandlers/roomJoinHandler");
+const roomLeaveHandler = require("./socketHandlers/roomLeaveHandler");
+
 const registerSocketServer = (server) => {
   const io = require("socket.io")(server, {
     cors: {
-      origin: "*", // change to your frontend URL in production
+      origin: "*",
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type"],
       credentials: true,
@@ -17,14 +22,29 @@ const registerSocketServer = (server) => {
   });
 
   serverStore.setSocketServerInstance(io);
-  // JWT auth middleware
   io.use((socket, next) => verifyTokenSocket(socket, next));
 
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
-
-    // Handle new connection
     newConnectionHandler(socket, io);
+
+    socket.on("room-status-update", (data) => {
+      const { roomId, peerId, status } = data;
+      let room = (serverStore.activeRooms || []).find(
+        (r) => r.roomId === roomId
+      );
+      if (!room) return;
+      let participant = room.participants.find((p) => p.peerId === peerId);
+      if (participant) {
+        Object.assign(participant, status);
+
+        room.participants.forEach((p) => {
+          socket
+            .to(p.socketId)
+            .emit("room-status-updated", { roomId, peerId, status });
+        });
+      }
+    });
 
     socket.on("direct-message", (data) => {
       directMessageHandler(socket, data);
@@ -42,7 +62,18 @@ const registerSocketServer = (server) => {
       deleteMessageHandler(socket, data);
     });
 
-    // Handle disconnect
+    socket.on("room-create", (data) => {
+      roomCreateHandler.roomCreateHandler(socket, data);
+    });
+
+    socket.on("room-join", (data) => {
+      roomJoinHandler(socket, data);
+    });
+
+    socket.on("room-leave", (data) => {
+      roomLeaveHandler(socket, data);
+    });
+
     socket.on("disconnect", () => {
       disconnectHandler(socket);
     });

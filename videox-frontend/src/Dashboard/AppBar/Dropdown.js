@@ -7,21 +7,17 @@ import { Logout } from "@mui/icons-material";
 import { logout } from "../../shared/utilities/auth";
 
 export default function Dropdown() {
-  // State for menu anchor
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
-  // Open menu on icon click
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
-  // Close menu
   const handleClose = () => {
     setAnchorEl(null);
   };
 
-  // Render dropdown menu with logout option
   return (
     <div>
       <IconButton onClick={handleClick}>
@@ -39,7 +35,6 @@ export default function Dropdown() {
           },
         }}
       >
-        {/* Logout menu item */}
         <MenuItem
           onClick={() => {
             handleClose();

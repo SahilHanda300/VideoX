@@ -11,7 +11,6 @@ import {
 import { MoreVert, Edit, Delete } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 
-// Message component: aligns message right if sent by current user
 const Message = ({
   content,
   username,
@@ -26,12 +25,12 @@ const Message = ({
   const currentUserId = useSelector((state) => state.auth.user?._id);
   const isOwnMessage = author?._id === currentUserId;
 
-  // State for editing
+
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
   const [anchorEl, setAnchorEl] = useState(null);
 
-  // Handle menu actions
+
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -68,7 +67,7 @@ const Message = ({
       gap={2}
       justifyContent={isOwnMessage ? "flex-end" : "flex-start"}
     >
-      {/* Show avatar and message bubble */}
+
       {!isOwnMessage && <Avatar>{username?.[0]?.toUpperCase() || "?"}</Avatar>}
       <Box
         sx={{
@@ -93,7 +92,6 @@ const Message = ({
           }
         }}
       >
-        {/* Message menu for own messages */}
         {isOwnMessage && (
           <IconButton
             className="message-menu"
@@ -130,7 +128,6 @@ const Message = ({
           })}
         </Typography>
 
-        {/* Message content - editable or static */}
         {isEditing ? (
           <Box sx={{ mt: 1 }}>
             <TextField
@@ -209,7 +206,6 @@ const Message = ({
           </Box>
         )}
 
-        {/* Context menu */}
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}

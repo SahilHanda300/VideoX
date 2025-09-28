@@ -6,10 +6,7 @@ exports.controllers = {
   postRegister,
 };
 
-// Aggregates authentication controller functions for VideoX backend
 
-
-// Export controllers for use in routes
 exports.controllers = {
   postLogin,
   postRegister,

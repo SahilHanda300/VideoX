@@ -2,26 +2,20 @@ import React, { useState } from "react";
 import { connect } from "react-redux";
 import { sendDirectMessage } from "../../realTimeCommunication/socketConnection";
 
-// Input component for sending new chat messages
 const NewMessageInput = ({ chosenChatDetails }) => {
   const [message, setMessage] = useState("");
 
-  // Debug: log chosenChatDetails on every render
   React.useEffect(() => {}, [chosenChatDetails]);
 
   const handleSend = () => {
     if (message.trim()) {
-      console.log("Sending:", message);
-
       if (message.length > 0) {
-        console.log("chosenChatDetails before send:", chosenChatDetails);
-        console.log("recieverUserId:", chosenChatDetails?._id);
         sendDirectMessage({
           recieverUserId: chosenChatDetails?._id,
           content: message,
         });
       }
-      setMessage(""); // clear input
+      setMessage("");
     }
   };
 

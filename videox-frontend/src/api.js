@@ -1,4 +1,3 @@
-// API utility functions for backend communication
 import axios from "axios";
 import { logout } from "../src/shared/utilities/auth";
 
@@ -7,7 +6,6 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
-// Attach JWT token to requests
 apiClient.interceptors.request.use((config) => {
   const user = JSON.parse(localStorage.getItem("user"));
   if (user && user.token) {
@@ -16,7 +14,6 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors globally
 apiClient.interceptors.response.use(
   (response) => response,
   (exception) => {
@@ -29,7 +26,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Auth and friends API calls
 export const login = async (data) => {
   try {
     return await apiClient.post("/auth/login", data);

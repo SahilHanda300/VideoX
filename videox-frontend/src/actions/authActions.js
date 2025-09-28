@@ -14,7 +14,7 @@ export const getActions = (dispatch) => {
     },
     setUserDetails: (userDetails) => {
       dispatch(setUserDetails(userDetails));
-    }
+    },
   };
 };
 
@@ -26,24 +26,29 @@ const setUserDetails = (userDetails) => {
 };
 
 const login = (userDetails, navigate) => async (dispatch) => {
-  const response = await api.login(userDetails);
-  console.log(response);
+  try {
+    const response = await api.login(userDetails);
+    console.log(response);
 
-  if (response.error) {
-    dispatch(openAlertMessage(response.exception.response.data));
-  } else {
-    const { userDetails } = response.data;
-    localStorage.setItem("user", JSON.stringify(userDetails));
     if (response.error) {
-      // show alert instead of navigating
-      console.error(
-        "Login failed:",
-        response.exception?.response?.data || response.exception?.message
+      dispatch(
+        openAlertMessage(
+          response.exception?.response?.data?.message ||
+            response.exception?.response?.data ||
+            "Login failed"
+        )
       );
-      return;
+      return false; 
+    } else {
+      const { userDetails } = response.data;
+      localStorage.setItem("user", JSON.stringify(userDetails));
+      dispatch(setUserDetails(userDetails));
+      navigate("/dashboard");
+      return true;
     }
-    dispatch(setUserDetails(userDetails));
-    navigate("/dashboard");
+  } catch (error) {
+    dispatch(openAlertMessage("An error occurred during login"));
+    return false;
   }
 };
 
@@ -52,7 +57,13 @@ const register = (userDetails, navigate) => async (dispatch) => {
   console.log(response);
 
   if (response.error) {
-    dispatch(openAlertMessage(response.exception.response.data));
+    dispatch(
+      openAlertMessage(
+        response.exception?.response?.data?.message ||
+          response.exception?.response?.data ||
+          "Registration failed"
+      )
+    );
   } else {
     const { userDetails } = response.data;
     localStorage.setItem("user", JSON.stringify(userDetails));

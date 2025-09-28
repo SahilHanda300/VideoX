@@ -1,7 +1,7 @@
 // Handles user registration requests
-const User = require("../../models/user"); // User model
-const bcrypt = require("bcryptjs"); // For password hashing
-const jwt = require("jsonwebtoken"); // For JWT token creation
+const User = require("../../models/user");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken"); 
 
 const postRegister = async (req, res) => {
   try {
@@ -30,6 +30,7 @@ const postRegister = async (req, res) => {
       {
         userId: user._id,
         mail,
+        username: user.username,
       },
       process.env.TOKEN_KEY,
       {

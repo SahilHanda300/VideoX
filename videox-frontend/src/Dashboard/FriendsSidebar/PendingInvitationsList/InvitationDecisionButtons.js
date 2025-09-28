@@ -2,7 +2,7 @@ import { React, useEffect } from "react";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton } from "@mui/material";
-// Renders accept/reject buttons for friend invitation
+
 const InvitationDecisionButtons = ({
   acceptInvitationHandler,
   rejectInvitationHandler,
@@ -10,7 +10,6 @@ const InvitationDecisionButtons = ({
 }) => {
   return (
     <div>
-      {/* Accept invitation button */}
       <IconButton
         style={{ color: "orange", paddingLeft: "2rem" }}
         disabled={disabled}
@@ -18,7 +17,7 @@ const InvitationDecisionButtons = ({
       >
         <CheckIcon />
       </IconButton>
-      {/* Reject invitation button */}
+
       <IconButton
         style={{ color: "orange", paddingLeft: "2rem" }}
         disabled={disabled}

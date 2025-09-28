@@ -5,19 +5,25 @@ import Snackbar from "@mui/material/Snackbar";
 import { getActions } from "../../actions/alertActions";
 
 const AlertNotification = ({
-  openAlertMessage,
+  showAlert,
   closeAlertMessage,
   alertMessageContent,
 }) => {
-  const isOpen = openAlertMessage && Boolean(alertMessageContent?.trim());
+  const isOpen =
+    showAlert &&
+    typeof alertMessageContent === "string" &&
+    alertMessageContent.length > 0;
 
   return (
     <Snackbar
       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       open={isOpen}
       onClose={closeAlertMessage}
+      autoHideDuration={3000}
     >
-      <Alert severity="info">{alertMessageContent}</Alert>
+      <Alert severity="info" onClose={closeAlertMessage}>
+        {alertMessageContent}
+      </Alert>
     </Snackbar>
   );
 };

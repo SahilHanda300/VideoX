@@ -23,14 +23,12 @@ const directMessageHandler = async (socket, data) => {
         messages: [message._id],
       });
       await newConversation.save();
-      // Fetch and emit fully populated conversation
       await chatHistory.updateChatHistory(newConversation._id.toString());
       return;
     }
 
     conversation.messages.push(message._id);
     await conversation.save();
-    // Fetch and emit fully populated conversation
     await chatHistory.updateChatHistory(conversation._id.toString());
   } catch (err) {
     console.error("Error handling direct message:", err);

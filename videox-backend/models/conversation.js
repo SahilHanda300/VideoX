@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Define conversation schema fields
 const conversationSchema = new mongoose.Schema({
   participants: [
     {

@@ -4,7 +4,6 @@ import { Typography } from "@mui/material";
 const LoginPageHeader = () => {
   return (
     <>
-      {/* Title for login page */}
       <Typography
         variant="h3"
         sx={{ fontSize: { xs: "1.5rem", lg: "2rem" } }}

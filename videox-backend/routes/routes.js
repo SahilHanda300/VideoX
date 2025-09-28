@@ -1,4 +1,4 @@
-// Auth API routes
+
 const express = require("express");
 const router = express.Router();
 const authControllers = require("../controllers/auth/authControllers");
@@ -6,7 +6,7 @@ const joi = require("joi");
 const validator = require("express-joi-validation").createValidator({});
 const auth = require("../middleware/auth");
 
-// Validation schemas
+
 const registerSchema = joi.object({
   username: joi.string().min(3).max(20).required(),
   password: joi.string().min(3).max(20).required(),
@@ -18,14 +18,14 @@ const loginSchema = joi.object({
   password: joi.string().min(3).max(20).required(),
 });
 
-// Register route
+
 router.post(
   "/register",
   validator.body(registerSchema),
   authControllers.controllers.postRegister
 );
 
-// Login route
+
 router.post(
   "/login",
   validator.body(loginSchema),

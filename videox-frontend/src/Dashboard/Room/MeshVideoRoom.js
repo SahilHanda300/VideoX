@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, memo } from "react";
-import { leaveRoom } from "../../realTimeCommunication/roomHandler";
 import {
   getPeerInstance,
   waitForPeerId,
@@ -8,16 +7,27 @@ import { getSocket } from "../../realTimeCommunication/socketConnection";
 import { useDispatch, useSelector } from "react-redux";
 
 const getLocalStream = async () => {
+  const audioConstraints = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    sampleRate: 44100,
+  };
+
   try {
     return await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 },
+      },
+      audio: audioConstraints,
     });
   } catch (err) {
     try {
       return await navigator.mediaDevices.getUserMedia({
         video: false,
-        audio: true,
+        audio: audioConstraints,
       });
     } catch (audioErr) {
       throw new Error(
@@ -27,89 +37,224 @@ const getLocalStream = async () => {
   }
 };
 
-const VideoPlayer = memo(({ stream, isFullscreen }) => {
-  const ref = useRef();
+const VideoPlayer = memo(
+  ({ stream, isFullscreen, showPlaceholder = false, username = "User" }) => {
+    const ref = useRef();
+    const [hasActiveVideo, setHasActiveVideo] = useState(false);
 
-  useEffect(() => {
-    const videoRef = ref.current;
-    if (!videoRef || !stream) return;
+    useEffect(() => {
+      const videoRef = ref.current;
+      if (!videoRef || !stream) return;
 
-    let playAttempts = 0;
-    const maxAttempts = 3;
-    let isComponentMounted = true;
+      let playAttempts = 0;
+      const maxAttempts = 3;
+      let isComponentMounted = true;
 
-    const startPlayback = async () => {
-      if (!isComponentMounted || !videoRef) return;
+      // Check if video track is active
+      const checkVideoTrackState = () => {
+        const videoTracks = stream.getVideoTracks();
+        const hasVideo =
+          videoTracks.length > 0 &&
+          videoTracks.some(
+            (track) => track.enabled && track.readyState === "live"
+          );
 
+        console.log(
+          `[VideoPlayer] ${username} - Video tracks:`,
+          videoTracks.length,
+          "Active:",
+          hasVideo,
+          "Track states:",
+          videoTracks.map((t) => ({
+            enabled: t.enabled,
+            readyState: t.readyState,
+          }))
+        );
+
+        setHasActiveVideo(hasVideo);
+        return hasVideo;
+      };
+
+      // Initial check
+      checkVideoTrackState();
+
+      // Listen for track changes
+      const handleTrackEnded = () => {
+        checkVideoTrackState();
+      };
+
+      stream.getTracks().forEach((track) => {
+        track.addEventListener("ended", handleTrackEnded);
+        track.addEventListener("mute", checkVideoTrackState);
+        track.addEventListener("unmute", checkVideoTrackState);
+      });
+
+      // Periodic check for track state changes (fallback) - less frequent for remote users
+      const checkInterval = username === "You" ? 500 : 2000; // Local: 500ms, Remote: 2s
+      const trackCheckInterval = setInterval(() => {
+        if (isComponentMounted) {
+          checkVideoTrackState();
+        }
+      }, checkInterval);
+
+      const startPlayback = async () => {
+        if (!isComponentMounted || !videoRef) return;
+
+        try {
+          // Only update srcObject if it's actually different
+          if (videoRef.srcObject !== stream) {
+            videoRef.srcObject = stream;
+          }
+
+          // Check if video is already playing
+          if (!videoRef.paused && videoRef.readyState >= 2) {
+            return;
+          }
+
+          await videoRef.play();
+          playAttempts = 0;
+        } catch (err) {
+          console.warn(
+            `[VideoPlayer] Playback error (attempt ${playAttempts + 1}):`,
+            err
+          );
+
+          if (playAttempts < maxAttempts && isComponentMounted) {
+            playAttempts++;
+            setTimeout(startPlayback, 500 * playAttempts); // Exponential backoff
+          }
+        }
+      };
+
+      const handleLoadedMetadata = () => {
+        console.log("[VideoPlayer] Metadata loaded, starting playback");
+        startPlayback();
+      };
+
+      const handleCanPlay = () => {
+        console.log("[VideoPlayer] Can play, starting playback");
+        startPlayback();
+      };
+
+      const handleError = (error) => {
+        console.warn("[VideoPlayer] Video error:", error);
+
+        if (playAttempts < maxAttempts && isComponentMounted) {
+          playAttempts++;
+          setTimeout(() => {
+            if (videoRef && isComponentMounted) {
+              videoRef.load(); // Reload the video element
+            }
+          }, 1000 * playAttempts);
+        }
+      };
+
+      // Add event listeners
+      videoRef.addEventListener("loadedmetadata", handleLoadedMetadata);
+      videoRef.addEventListener("canplay", handleCanPlay);
+      videoRef.addEventListener("error", handleError);
+
+      // Set the stream
       if (videoRef.srcObject !== stream) {
         videoRef.srcObject = stream;
       }
 
-      try {
-        await videoRef.play();
-        playAttempts = 0;
-      } catch (err) {
-        if (playAttempts < maxAttempts && isComponentMounted) {
-          playAttempts++;
-          setTimeout(startPlayback, 1000);
-        }
-      }
-    };
+      return () => {
+        isComponentMounted = false;
+        clearInterval(trackCheckInterval);
+        videoRef.removeEventListener("loadedmetadata", handleLoadedMetadata);
+        videoRef.removeEventListener("canplay", handleCanPlay);
+        videoRef.removeEventListener("error", handleError);
 
-    if (videoRef.srcObject && videoRef.srcObject !== stream) {
-      videoRef.srcObject = null;
+        // Clean up track event listeners
+        stream.getTracks().forEach((track) => {
+          track.removeEventListener("ended", handleTrackEnded);
+          track.removeEventListener("mute", checkVideoTrackState);
+          track.removeEventListener("unmute", checkVideoTrackState);
+        });
+
+        // Only clear srcObject if it matches our stream
+        if (videoRef.srcObject === stream) {
+          videoRef.srcObject = null;
+        }
+      };
+    }, [stream, username]);
+
+    // Show placeholder logic:
+    // - For local user: only use showPlaceholder prop (based on Redux state)
+    // - For remote users: use showPlaceholder prop primarily, track detection as fallback only if really needed
+    const shouldShowPlaceholder = showPlaceholder;
+
+    console.log(
+      `[VideoPlayer] ${username} - showPlaceholder:`,
+      showPlaceholder,
+      "hasActiveVideo:",
+      hasActiveVideo,
+      "shouldShowPlaceholder:",
+      shouldShowPlaceholder
+    );
+
+    if (shouldShowPlaceholder) {
+      return (
+        <div
+          className={
+            isFullscreen
+              ? "rounded-lg shadow w-full h-full max-w-full max-h-full aspect-video bg-gray-800 flex items-center justify-center"
+              : "rounded-md shadow w-full h-auto aspect-video bg-gray-800 flex items-center justify-center border border-orange-400"
+          }
+          style={{
+            width: "100%",
+            height: "100%",
+            maxWidth: "100%",
+            maxHeight: window.innerWidth < 768 ? "300px" : "100%",
+            minHeight: "200px",
+          }}
+        >
+          <div className="text-center text-white">
+            <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-2">
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
+            <p className="text-sm">{username}</p>
+            <p className="text-xs text-gray-400">Camera is off</p>
+          </div>
+        </div>
+      );
     }
 
-    const handleLoadedMetadata = () => {
-      startPlayback();
-    };
-
-    const handleError = (error) => {
-      if (playAttempts < maxAttempts) {
-        playAttempts++;
-        
-        videoRef.srcObject = null;
-        setTimeout(() => {
-          videoRef.srcObject = stream;
-        }, 1000);
-      }
-    };
-
-    videoRef.addEventListener("loadedmetadata", handleLoadedMetadata);
-    videoRef.addEventListener("error", handleError);
-
-    videoRef.srcObject = stream;
-
-    return () => {
-      videoRef.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      videoRef.removeEventListener("error", handleError);
-      if (videoRef.srcObject === stream) {
-        videoRef.srcObject = null;
-      }
-    };
-  }, [stream]);
-
-  return (
-    <video
-      ref={ref}
-      autoPlay
-      playsInline
-      muted={isFullscreen === false}
-      className={
-        isFullscreen
-          ? "rounded-lg shadow w-full h-full max-w-full max-h-full aspect-video object-cover bg-black"
-          : "rounded-md shadow w-full h-auto aspect-video object-cover bg-black border border-orange-400"
-      }
-      style={{
-        width: "100%",
-        height: "100%",
-        maxWidth: "100%",
-        maxHeight: window.innerWidth < 768 ? "300px" : "100%",
-        objectFit: "cover",
-      }}
-    />
-  );
-});
+    return (
+      <video
+        ref={ref}
+        autoPlay
+        playsInline
+        muted={true} // Always muted to prevent audio feedback/echo
+        className={
+          isFullscreen
+            ? "rounded-lg shadow w-full h-full max-w-full max-h-full aspect-video object-cover bg-black"
+            : "rounded-md shadow w-full h-auto aspect-video object-cover bg-black border border-orange-400"
+        }
+        style={{
+          width: "100%",
+          height: "100%",
+          maxWidth: "100%",
+          maxHeight: window.innerWidth < 768 ? "300px" : "100%",
+          objectFit: "cover",
+        }}
+      />
+    );
+  }
+);
 
 const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -131,6 +276,23 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
   const isScreenSharingActive = useSelector(
     (state) => state.room.isScreenSharingActive
   );
+
+  // Handle screen sharing stream updates
+  useEffect(() => {
+    if (isScreenSharingActive && !screenSharingStream) {
+      // Screen sharing started but no stream yet
+      console.log(
+        "[MeshVideoRoom] Screen sharing started, waiting for stream..."
+      );
+    } else if (!isScreenSharingActive && screenSharingStream) {
+      // Screen sharing stopped, clean up stream
+      console.log(
+        "[MeshVideoRoom] Screen sharing stopped, cleaning up stream..."
+      );
+      screenSharingStream.getTracks().forEach((track) => track.stop());
+      setScreenSharingStream(null);
+    }
+  }, [isScreenSharingActive, screenSharingStream]);
   const [error, setError] = useState("");
 
   const peer = useRef(null);
@@ -154,7 +316,6 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
         }
 
         currentStream = stream;
-        
 
         stream.getAudioTracks().forEach((track) => {
           track.enabled = isAudioEnabled;
@@ -286,17 +447,28 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
     };
   }, [roomId, peerIds, localStream]);
 
-   useEffect(() => {
+  useEffect(() => {
     const stream = isScreenSharingActive ? screenSharingStream : localStream;
     if (stream) {
-  
-      stream.getAudioTracks().forEach((track) => {
-        track.enabled = isAudioEnabled;
-      });
-  
-      stream.getVideoTracks().forEach((track) => {
-        track.enabled = isVideoEnabled;
-      });
+      // Enable/disable tracks more carefully to prevent WebRTC issues
+      try {
+        // Use requestAnimationFrame to ensure DOM is ready and prevent timing issues
+        requestAnimationFrame(() => {
+          stream.getAudioTracks().forEach((track) => {
+            if (track.readyState === "live") {
+              track.enabled = isAudioEnabled;
+            }
+          });
+
+          stream.getVideoTracks().forEach((track) => {
+            if (track.readyState === "live") {
+              track.enabled = isVideoEnabled;
+            }
+          });
+        });
+      } catch (err) {
+        console.warn("[MeshVideoRoom] Error toggling tracks:", err);
+      }
     }
   }, [
     isAudioEnabled,
@@ -307,18 +479,77 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
   ]);
 
   const handleStream = React.useCallback((peerId, remoteStream) => {
+    console.log(
+      `[MeshVideoRoom] Handling stream for peer ${peerId}:`,
+      remoteStream.id
+    );
+
     setRemoteStreams((prev) => {
+      // Check if we already have this exact stream
       const existingStream = prev.find(
         (s) => s.peerId === peerId && s.stream.id === remoteStream.id
       );
-      if (existingStream) return prev;
+      if (existingStream) {
+        console.log(`[MeshVideoRoom] Stream already exists for peer ${peerId}`);
+        return prev;
+      }
+
+      // Clean up any existing stream for this peer first
+      const existingPeerStream = prev.find((s) => s.peerId === peerId);
+      if (
+        existingPeerStream &&
+        existingPeerStream.stream.id !== remoteStream.id
+      ) {
+        console.log(`[MeshVideoRoom] Replacing stream for peer ${peerId}`);
+        // Stop the old stream tracks properly
+        existingPeerStream.stream.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (err) {
+            console.warn("Error stopping old track:", err);
+          }
+        });
+      }
+
+      // Add listeners to the new stream to detect track changes
+      remoteStream.getTracks().forEach((track) => {
+        track.addEventListener("ended", () => {
+          console.log(
+            `[MeshVideoRoom] Track ended for peer ${peerId}:`,
+            track.kind
+          );
+        });
+
+        // Listen for track enable/disable changes
+        const originalEnabled = track.enabled;
+        const checkTrackState = () => {
+          if (track.enabled !== originalEnabled) {
+            console.log(
+              `[MeshVideoRoom] Track ${track.kind} state changed for peer ${peerId}:`,
+              track.enabled
+            );
+            // Force a re-render by updating the stream reference
+            setRemoteStreams((current) =>
+              current.map((s) =>
+                s.peerId === peerId ? { ...s, lastUpdate: Date.now() } : s
+              )
+            );
+          }
+        };
+
+        // Periodic check for track state changes
+        const trackStateInterval = setInterval(checkTrackState, 500);
+        track.addEventListener("ended", () =>
+          clearInterval(trackStateInterval)
+        );
+      });
+
       return [
         ...prev.filter((s) => s.peerId !== peerId),
-        { peerId, stream: remoteStream },
+        { peerId, stream: remoteStream, lastUpdate: Date.now() },
       ];
     });
   }, []);
-
 
   useEffect(() => {
     if (!myPeerId || !localStream || !peerIds || !peer.current) return;
@@ -413,13 +644,11 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
     return () => socket.off("room-state-updated", handleStateUpdate);
   }, [roomDetails, dispatch]);
 
-
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
     const handleUserLeft = ({ userId, peerId }) => {
-
       // Clean up any existing call with this peer
       if (calledPeersRef.current.has(peerId)) {
         calledPeersRef.current.delete(peerId);
@@ -449,7 +678,6 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
     };
 
     const handleUserJoined = ({ userId, peerId }) => {
-
       if (calledPeersRef.current.has(peerId)) {
         calledPeersRef.current.delete(peerId);
       }
@@ -493,16 +721,21 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
 
   useEffect(() => {
     const socket = getSocket();
-    if (socket && roomId) {
-      socket.emit("room-state-update", {
-        roomId,
-        peerId: myPeerId,
-        state: {
-          isAudioEnabled,
-          isVideoEnabled,
-          isScreenSharingActive,
-        },
-      });
+    if (socket && roomId && myPeerId) {
+      // Debounce state updates to prevent rapid changes that can cause video freezing
+      const timeoutId = setTimeout(() => {
+        socket.emit("room-state-update", {
+          roomId,
+          peerId: myPeerId,
+          state: {
+            isAudioEnabled,
+            isVideoEnabled,
+            isScreenSharingActive,
+          },
+        });
+      }, 100); // 100ms debounce
+
+      return () => clearTimeout(timeoutId);
     }
   }, [roomId, myPeerId, isAudioEnabled, isVideoEnabled, isScreenSharingActive]);
 
@@ -534,7 +767,6 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
           gridAutoRows: isMobile ? "min-content" : "1fr",
         }}
       >
-      
         {localStream && (
           <div className="flex flex-col items-center justify-center w-full min-h-[300px] md:h-full">
             <div className="text-xs text-gray-400 mb-1 flex items-center gap-2 justify-center w-full font-medium">
@@ -615,7 +847,12 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
                 </span>
               )}
             </div>
-            <VideoPlayer stream={localStream} isFullscreen={false} />
+            <VideoPlayer
+              stream={localStream}
+              isFullscreen={false}
+              showPlaceholder={!isVideoEnabled}
+              username="You"
+            />
           </div>
         )}
 
@@ -633,6 +870,36 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
             isAudio = participant.isAudioEnabled !== false;
             isVideo = participant.isVideoEnabled !== false;
             isScreen = !!participant.isScreenSharingActive;
+          }
+
+          // Check actual stream track states but be less strict
+          if (stream) {
+            const videoTracks = stream.getVideoTracks();
+
+            console.log(
+              `[MeshVideoRoom] Remote user ${username} - Video tracks:`,
+              videoTracks.length,
+              "Participant isVideo:",
+              participant?.isVideoEnabled,
+              "Track states:",
+              videoTracks.map((t) => ({
+                enabled: t.enabled,
+                readyState: t.readyState,
+              }))
+            );
+
+            // Only override to false if we're very sure there's no video
+            // (participant says no video AND no enabled tracks)
+            if (participant && participant.isVideoEnabled === false) {
+              isVideo = false;
+            } else if (videoTracks.length === 0) {
+              // No video tracks at all
+              isVideo = false;
+            }
+            // For audio, be more lenient and trust participant state primarily
+            if (participant && participant.isAudioEnabled === false) {
+              isAudio = false;
+            }
           }
 
           return (
@@ -718,7 +985,12 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
                   </span>
                 )}
               </div>
-              <VideoPlayer stream={stream} isFullscreen={true} />
+              <VideoPlayer
+                stream={stream}
+                isFullscreen={true}
+                showPlaceholder={!isVideo}
+                username={username}
+              />
             </div>
           );
         })}

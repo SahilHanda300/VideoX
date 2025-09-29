@@ -2,7 +2,6 @@ import { setOpenRoom, setRoomDetails } from "../actions/roomActions";
 import store from "../store/store";
 import * as socketConnection from "./socketConnection";
 
-
 import { getPeerInstance, waitForPeerId } from "./peerConnectionManager";
 
 export const createNewRoom = async () => {
@@ -17,7 +16,19 @@ export const createNewRoom = async () => {
 
   const peerId = await waitForPeerId();
   navigator.mediaDevices
-    .getUserMedia({ video: true, audio: true })
+    .getUserMedia({
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 },
+      },
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 44100,
+      },
+    })
     .then((stream) => {
       // localStream is now managed in component state, not Redux
       socket.emit("room-create", { peerId });
@@ -48,7 +59,19 @@ export const joinRoom = async (roomId) => {
 
   const peerId = await waitForPeerId();
   navigator.mediaDevices
-    .getUserMedia({ video: true, audio: true })
+    .getUserMedia({
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 },
+      },
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 44100,
+      },
+    })
     .then((stream) => {
       // localStream is now managed in component state, not Redux
       socket.emit("room-join", { roomId, peerId });
@@ -77,7 +100,6 @@ export const leaveRoom = (roomId) => {
     alert("Unable to leave room: not connected to server.");
     return;
   }
-
 
   socket.emit("room-leave", { roomId });
   socket.once("room-leave-success", (data) => {

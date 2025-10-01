@@ -50,7 +50,6 @@ const VideoPlayer = memo(
       const maxAttempts = 3;
       let isComponentMounted = true;
 
-      // Check if video track is active
       const checkVideoTrackState = () => {
         const videoTracks = stream.getVideoTracks();
         const hasVideo =
@@ -75,10 +74,8 @@ const VideoPlayer = memo(
         return hasVideo;
       };
 
-      // Initial check
       checkVideoTrackState();
 
-      // Listen for track changes
       const handleTrackEnded = () => {
         checkVideoTrackState();
       };
@@ -89,8 +86,7 @@ const VideoPlayer = memo(
         track.addEventListener("unmute", checkVideoTrackState);
       });
 
-      // Periodic check for track state changes (fallback) - less frequent for remote users
-      const checkInterval = username === "You" ? 500 : 2000; // Local: 500ms, Remote: 2s
+      const checkInterval = username === "You" ? 500 : 2000;
       const trackCheckInterval = setInterval(() => {
         if (isComponentMounted) {
           checkVideoTrackState();
@@ -106,7 +102,6 @@ const VideoPlayer = memo(
             videoRef.srcObject = stream;
           }
 
-          // Check if video is already playing
           if (!videoRef.paused && videoRef.readyState >= 2) {
             return;
           }
@@ -121,7 +116,7 @@ const VideoPlayer = memo(
 
           if (playAttempts < maxAttempts && isComponentMounted) {
             playAttempts++;
-            setTimeout(startPlayback, 500 * playAttempts); // Exponential backoff
+            setTimeout(startPlayback, 500 * playAttempts); 
           }
         }
       };
@@ -149,12 +144,10 @@ const VideoPlayer = memo(
         }
       };
 
-      // Add event listeners
       videoRef.addEventListener("loadedmetadata", handleLoadedMetadata);
       videoRef.addEventListener("canplay", handleCanPlay);
       videoRef.addEventListener("error", handleError);
 
-      // Set the stream
       if (videoRef.srcObject !== stream) {
         videoRef.srcObject = stream;
       }
@@ -173,16 +166,13 @@ const VideoPlayer = memo(
           track.removeEventListener("unmute", checkVideoTrackState);
         });
 
-        // Only clear srcObject if it matches our stream
+        
         if (videoRef.srcObject === stream) {
           videoRef.srcObject = null;
         }
       };
     }, [stream, username]);
 
-    // Show placeholder logic:
-    // - For local user: only use showPlaceholder prop (based on Redux state)
-    // - For remote users: use showPlaceholder prop primarily, track detection as fallback only if really needed
     const shouldShowPlaceholder = showPlaceholder;
 
     console.log(
@@ -277,10 +267,8 @@ const MeshVideoRoom = ({ roomId, peerIds, controls }) => {
     (state) => state.room.isScreenSharingActive
   );
 
-  // Handle screen sharing stream updates
   useEffect(() => {
     if (isScreenSharingActive && !screenSharingStream) {
-      // Screen sharing started but no stream yet
       console.log(
         "[MeshVideoRoom] Screen sharing started, waiting for stream..."
       );

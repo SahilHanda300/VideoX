@@ -38,7 +38,7 @@ const login = (userDetails, navigate) => async (dispatch) => {
             "Login failed"
         )
       );
-      return false; 
+      return false;
     } else {
       const { userDetails } = response.data;
       localStorage.setItem("user", JSON.stringify(userDetails));
@@ -47,27 +47,43 @@ const login = (userDetails, navigate) => async (dispatch) => {
       return true;
     }
   } catch (error) {
-    dispatch(openAlertMessage("An error occurred during login"));
+    console.error("Login error:", error);
+    const backendMessage =
+      error?.response?.data?.message ||
+      error?.response?.data ||
+      error.message ||
+      "An error occurred during login";
+    dispatch(openAlertMessage(backendMessage));
     return false;
   }
 };
 
 const register = (userDetails, navigate) => async (dispatch) => {
-  const response = await api.register(userDetails);
-  console.log(response);
+  try {
+    const response = await api.register(userDetails);
+    console.log(response);
 
-  if (response.error) {
-    dispatch(
-      openAlertMessage(
-        response.exception?.response?.data?.message ||
-          response.exception?.response?.data ||
-          "Registration failed"
-      )
-    );
-  } else {
-    const { userDetails } = response.data;
-    localStorage.setItem("user", JSON.stringify(userDetails));
-    dispatch(setUserDetails(userDetails));
-    navigate("/dashboard");
+    if (response.error) {
+      dispatch(
+        openAlertMessage(
+          response.exception?.response?.data?.message ||
+            response.exception?.response?.data ||
+            "Registration failed"
+        )
+      );
+    } else {
+      const { userDetails } = response.data;
+      localStorage.setItem("user", JSON.stringify(userDetails));
+      dispatch(setUserDetails(userDetails));
+      navigate("/dashboard");
+    }
+  } catch (error) {
+    console.error("Register error:", error);
+    const backendMessage =
+      error?.response?.data?.message ||
+      error?.response?.data ||
+      error.message ||
+      "An error occurred during registration";
+    dispatch(openAlertMessage(backendMessage));
   }
 };

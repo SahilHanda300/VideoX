@@ -53,7 +53,7 @@ const DashboardPage = ({ setUserDetails, isUserInRoom }) => {
     if (window.innerWidth < 768 && showSidebars) {
       setShowSidebars(false);
     }
-  }, [chosenChatDetails, isUserInRoom, showSidebars]);
+  }, [chosenChatDetails, isUserInRoom]);
 
   useEffect(() => {
     if (
@@ -73,11 +73,22 @@ const DashboardPage = ({ setUserDetails, isUserInRoom }) => {
     <div className="w-full h-screen flex flex-col">
       <AppBar onToggleSidebars={toggleSidebars} />
       <div className="flex flex-1 overflow-hidden relative h-full">
+        {/* Backdrop overlay for mobile sidebar */}
+        {showSidebars && window.innerWidth < 768 && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 z-10 md:hidden"
+            onClick={() => setShowSidebars(false)}
+          />
+        )}
         <div
           className={`
-            sidebar-container absolute md:static z-20 bg-white md:bg-transparent h-full flex transition-all duration-300
+            sidebar-container fixed md:static z-20 bg-white md:bg-transparent h-full flex transition-all duration-300
+            w-[350px] md:w-auto top-0
             ${showSidebars ? "left-0" : "-left-full"} md:left-0
           `}
+          style={{
+            boxShadow: showSidebars ? "2px 0 8px rgba(0,0,0,0.15)" : "none",
+          }}
         >
           <SideBar />
           <FriendsSidebar />

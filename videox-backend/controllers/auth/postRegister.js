@@ -1,7 +1,7 @@
 // Handles user registration requests
 const User = require("../../models/user");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken"); 
+const jwt = require("jsonwebtoken");
 
 const postRegister = async (req, res) => {
   try {
@@ -32,7 +32,7 @@ const postRegister = async (req, res) => {
         mail,
         username: user.username,
       },
-      process.env.TOKEN_KEY,
+      process.env.JWT_SECRET,
       {
         expiresIn: "24h",
       }
@@ -48,7 +48,9 @@ const postRegister = async (req, res) => {
     });
   } catch (error) {
     // Internal server error
-    return res.status(500).send("Error occured. Please try again.");
+    return res
+      .status(500)
+      .json({ message: "Error occured. Please try again." });
   }
 };
 

@@ -8,7 +8,7 @@ const verifyTokenSocket = (socket, next) => {
     return next(new Error("Authentication error"));
   }
 
-  jwt.verify(token, config.TOKEN_KEY, (err, decoded) => {
+  jwt.verify(token, config.JWT_SECRET, (err, decoded) => {
     if (err) {
       return next(new Error("Authentication error"));
     }

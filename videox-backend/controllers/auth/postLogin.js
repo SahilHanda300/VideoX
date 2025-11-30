@@ -4,13 +4,19 @@ const jwt = require("jsonwebtoken");
 
 const postLogin = async (req, res) => {
   try {
-    const { mail, password } = req.body;
+    const { mail, password } = req.body || {};
+
+    if (!mail || !password) {
+      return res
+        .status(400)
+        .json({ message: "Mail and password are required" });
+    }
     const user = await User.findOne({ mail: mail.toLowerCase() });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign(
         { userId: user._id, mail: user.mail, username: user.username },
-        process.env.TOKEN_KEY,
+        process.env.JWT_SECRET,
         { expiresIn: "24h" }
       );
 
@@ -26,7 +32,10 @@ const postLogin = async (req, res) => {
 
     return res.status(400).json({ message: "Invalid credentials" });
   } catch (err) {
-    return res.status(500).json({ message: "Something went wrong" });
+    console.error("postLogin error:", err);
+    return res
+      .status(500)
+      .json({ message: err.message || "Something went wrong" });
   }
 };
 

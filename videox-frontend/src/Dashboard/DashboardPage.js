@@ -11,7 +11,6 @@ import { connectWithSocketServer } from "../realTimeCommunication/socketConnecti
 import Room from "./Room/Room";
 const DashboardPage = ({ setUserDetails, isUserInRoom }) => {
   const [showSidebars, setShowSidebars] = useState(false);
-  const [canRejoinRoom, setCanRejoinRoom] = useState(false);
   const [lastRoomId, setLastRoomId] = useState(null);
   const roomDetails = useSelector((state) => state.room.roomDetails);
   const chosenChatDetails = useSelector(
@@ -61,13 +60,11 @@ const DashboardPage = ({ setUserDetails, isUserInRoom }) => {
       roomDetails &&
       (roomDetails.roomId || roomDetails._id)
     ) {
-      setLastRoomId(roomDetails.roomId || roomDetails._id);
-      setCanRejoinRoom(true);
     }
     if (isUserInRoom) {
-      setCanRejoinRoom(false);
     }
   }, [isUserInRoom, roomDetails]);
+  // Rejoin flow removed: no special handling when user is not in room
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -100,39 +97,9 @@ const DashboardPage = ({ setUserDetails, isUserInRoom }) => {
       {isUserInRoom && (
         <Room
           onLeaveRoom={() => {
-            // Store last room ID before leaving
-            if (roomDetails && (roomDetails.roomId || roomDetails._id)) {
-              setLastRoomId(roomDetails.roomId || roomDetails._id);
-              setCanRejoinRoom(true);
-            }
+            // Rejoin removed — simply leave the room without storing last room id
           }}
         />
-      )}
-      {!isUserInRoom && canRejoinRoom && lastRoomId && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 32,
-            right: 32,
-            zIndex: 2000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <button
-            className="bg-orange-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-orange-600 transition text-lg font-semibold"
-            style={{ minWidth: 160 }}
-            onClick={() => {
-              setCanRejoinRoom(false);
-              import("../realTimeCommunication/roomHandler").then((mod) => {
-                mod.joinRoom(lastRoomId);
-              });
-            }}
-          >
-            Re-join Room
-          </button>
-        </div>
       )}
     </div>
   );

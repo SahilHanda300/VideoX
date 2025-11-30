@@ -1,10 +1,8 @@
 export const TOGGLE_AUDIO = "ROOM.TOGGLE_AUDIO";
-export const TOGGLE_VIDEO = "ROOM.TOGGLE_VIDEO";
 export const START_SCREEN_SHARE = "ROOM.START_SCREEN_SHARE";
 export const STOP_SCREEN_SHARE = "ROOM.STOP_SCREEN_SHARE";
 
 export const toggleAudio = () => ({ type: TOGGLE_AUDIO });
-export const toggleVideo = () => ({ type: TOGGLE_VIDEO });
 export const startScreenShare = (stream) => ({
   type: START_SCREEN_SHARE,
   stream,

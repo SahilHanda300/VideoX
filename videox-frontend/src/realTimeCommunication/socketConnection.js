@@ -4,7 +4,6 @@ import { setPendingInvitations, setFriends } from "../actions/friendsActions";
 import { updateDirectChatHistoryIfActive } from "../shared/utilities/chat";
 import store from "../store/store";
 
-
 export const sendRoomStatusUpdate = (roomId, peerId, status) => {
   if (socket && roomId && peerId) {
     socket.emit("room-status-update", { roomId, peerId, status });
@@ -14,8 +13,7 @@ export const sendRoomStatusUpdate = (roomId, peerId, status) => {
 export const listenRoomStatusUpdates = () => {
   if (!socket) return;
   socket.on("room-status-updated", (data) => {
-
-    const { peerId, status } = data; 
+    const { peerId, status } = data;
     const state = store.getState();
     const roomDetails = state.room.roomDetails;
     if (!roomDetails || !roomDetails.participants) return;
@@ -30,7 +28,6 @@ export const listenRoomStatusUpdates = () => {
 };
 export const getSocket = () => socket;
 
-
 export const createNewRoom = () => {
   if (socket) {
     socket.emit("room-create");
@@ -39,10 +36,8 @@ export const createNewRoom = () => {
   }
 };
 
-
 const tingAudio = typeof window !== "undefined" ? new Audio("/ting.mp3") : null;
 let socket = null;
-
 
 let isLoadingChatHistory = false;
 
@@ -70,6 +65,63 @@ export const connectWithSocketServer = (userDetails) => {
       }
     });
 
+    socket.on("room-peer-presence", (data) => {
+      console.log("[SOCKET] 📡 Received room-peer-presence:", data);
+      console.log(
+        "[SOCKET] 📡 Event details - userId:",
+        data.userId,
+        "peerId:",
+        data.peerId,
+        "audio:",
+        data.isAudioEnabled,
+        "video:",
+        data.isVideoEnabled
+      );
+      const { userId, peerId, isAudioEnabled, isVideoEnabled } = data;
+      const state = store.getState();
+      const roomDetails = state.room.roomDetails;
+
+      if (roomDetails && roomDetails.participants) {
+        // Update participant's audio/video state
+        const updatedParticipants = roomDetails.participants.map(
+          (participant) => {
+            if (
+              participant.userId === userId ||
+              participant.peerId === peerId
+            ) {
+              const updated = {
+                ...participant,
+                peerId: peerId,
+                isAudioEnabled:
+                  typeof isAudioEnabled !== "undefined"
+                    ? isAudioEnabled
+                    : participant.isAudioEnabled,
+                isVideoEnabled:
+                  typeof isVideoEnabled !== "undefined"
+                    ? isVideoEnabled
+                    : participant.isVideoEnabled,
+              };
+              console.log(
+                "[SOCKET] ✅ Updated participant:",
+                participant.username,
+                "audio:",
+                updated.isAudioEnabled,
+                "video:",
+                updated.isVideoEnabled
+              );
+              return updated;
+            }
+            return participant;
+          }
+        );
+
+        store.dispatch({
+          type: "ROOM.SET_ROOM_DETAILS",
+          roomDetails: { ...roomDetails, participants: updatedParticipants },
+        });
+      }
+    });
+
     socket.on("connect", () => {
       console.log("Connected to socket server:", socket.id);
     });
@@ -93,7 +145,6 @@ export const connectWithSocketServer = (userDetails) => {
       console.log("[SOCKET] Received friends-list:", friends);
       store.dispatch(setFriends(friends));
     });
-
 
     socket.on("online-users", (data) => {
       const { onlineUsers } = data;
@@ -134,7 +185,6 @@ export const connectWithSocketServer = (userDetails) => {
     });
 
     socket.on("active-rooms", (data) => {
-
       if (data && data.activeRooms) {
         store.dispatch({
           type: "ROOM.SET_ACTIVE_ROOMS",

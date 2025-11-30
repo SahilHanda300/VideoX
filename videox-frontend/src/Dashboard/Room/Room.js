@@ -8,8 +8,18 @@ const Room = ({ onLeaveRoom }) => {
   const roomDetails = useSelector((state) => state.room.roomDetails);
   const roomId = roomDetails?.roomId || roomDetails?._id || "";
   const peerIds = roomDetails?.participants?.map((p) => p.peerId) || [];
+
+  // Debug logging for room and participants
+  console.log("[Room] Room details:", {
+    roomDetails,
+    roomId,
+    participants: roomDetails?.participants,
+    participantsCount: roomDetails?.participants?.length || 0,
+    peerIds,
+    peerIdsCount: peerIds.length,
+  });
   const fullscreenClass =
-    "fixed inset-0 bg-orange-400 flex flex-col justify-center items-center z-50 transition-all duration-300 w-full h-full min-h-screen min-w-[320px] p-2 sm:p-4 md:p-8 overflow-auto";
+    "fixed inset-0 bg-white flex flex-col justify-center items-center z-50 transition-all duration-300 w-full h-full min-h-screen min-w-[320px] p-2 sm:p-4 md:p-8 overflow-auto";
   const screenShareSetterRef = useRef(null);
   return (
     <div className={fullscreenClass}>

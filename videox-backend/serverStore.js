@@ -52,6 +52,8 @@ const addNewActiveRoom = (userId, socketId, username) => {
         userId,
         username,
         socketId,
+        isAudioEnabled: true, // Default audio enabled for room creator
+        isVideoEnabled: true, // Default video enabled for room creator
       },
     ],
     roomId: uuidv4(),
